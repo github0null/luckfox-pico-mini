@@ -169,6 +169,7 @@ function luckfox_load_static_dts() {
 	local dtbo_node_name
 	if [ ! -d ${LF_CUSTOM_DTS_PATH}/fdt_overlay/ ]; then
 		echo "Can't find ${LF_CUSTOM_DTS_PATH}/fdt_overlay dir!"
+		exit 1
 	fi
 
 	for dts_file in ${LF_CUSTOM_DTS_PATH}/fdt_overlay/*.dts; do

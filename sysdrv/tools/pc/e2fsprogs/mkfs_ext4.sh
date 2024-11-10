@@ -44,11 +44,11 @@ if [ $? != 0 ]; then
 	echo "*** Maybe you need to increase the filesystem size "
 	exit 1
 fi
-echo "resize2fs -M $dst"
-resize2fs -M $dst
+echo "resize2fs $dst"
+resize2fs $dst
 echo "e2fsck -fy  $dst"
 e2fsck -fy  $dst
 echo "tune2fs -m 5  $dst"
 tune2fs -m 5  $dst
-echo "resize2fs -M $dst"
-resize2fs -M $dst
+echo "resize2fs $dst"
+resize2fs $dst

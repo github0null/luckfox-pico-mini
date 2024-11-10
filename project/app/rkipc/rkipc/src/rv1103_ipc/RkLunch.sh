@@ -91,6 +91,12 @@ post_chk()
 			ln -s -f /oem/usr/share/rkipc-300w.ini $default_rkipc_ini
 		fi
 	fi
+
+	if [ ! -f "$default_rkipc_ini" ];then
+		echo "Warn: No image sensor found (sc530ai, sc4336 or sc3336) ! check your camera !"
+		exit -1
+	fi
+
 	tmp_md5=/tmp/.rkipc-ini.md5sum
 	data_md5=/userdata/.rkipc-default.md5sum
 	md5sum $default_rkipc_ini > $tmp_md5
@@ -105,10 +111,6 @@ post_chk()
 		echo "$chk_rkipc" > $data_md5
 	fi
 
-	if [ ! -f "$default_rkipc_ini" ];then
-		echo "Error: not found rkipc.ini !!!"
-		exit -1
-	fi
 	if [ ! -f "$rkipc_ini" ]; then
 		cp $default_rkipc_ini $rkipc_ini -f
 	fi
@@ -126,10 +128,10 @@ post_chk()
 
 rcS
 
+echo ">>> Start RK IPC Application ..."
+
 ulimit -c unlimited
 echo "/data/core-%p-%e" > /proc/sys/kernel/core_pattern
 # echo 0 > /sys/devices/platform/rkcif-mipi-lvds/is_use_dummybuf
-
 echo 1 > /proc/sys/vm/overcommit_memory
-
-post_chk &
+# post_chk &

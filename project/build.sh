@@ -412,8 +412,9 @@ function usage() {
 	echo "clean uboot        -clean uboot"
 	echo "clean kernel       -clean kernel"
 	echo "clean driver       -clean driver"
-	echo "clean rootfs       -clean rootfs"
-	echo "clean sysdrv       -clean uboot/kernel/rootfs"
+	echo "clean rootfs       -clean rootfs output"
+	echo "clean rootfs_all   -clean rootfs, buildroot and boardtools"
+	echo "clean sysdrv       -clean uboot, kernel, rootfs"
 	echo "clean media        -clean rockchip media libraries"
 	echo "clean app          -clean app"
 	echo "clean recovery     -clean recovery"
@@ -1250,6 +1251,12 @@ function build_clean() {
 		make rootfs_clean -C ${SDK_SYSDRV_DIR}
 		rm -rf $RK_PROJECT_PACKAGE_ROOTFS_DIR
 		;;
+	rootfs_all)
+		make buildroot_clean -C ${SDK_SYSDRV_DIR}
+		make boardtools_clean -C ${SDK_SYSDRV_DIR}
+		make rootfs_clean -C ${SDK_SYSDRV_DIR}
+		rm -rf $RK_PROJECT_PACKAGE_ROOTFS_DIR
+		;;
 	driver)
 		make drv_clean -C ${SDK_SYSDRV_DIR}
 		rm -rf $RK_PROJECT_PATH_SYSDRV/kernel_drv_ko
@@ -1746,6 +1753,22 @@ function parse_partition_file() {
 
 	mkdir -p $(dirname $RK_PROJECT_FILE_ROOTFS_SCRIPT)
 	echo "#!/bin/sh" >$RK_PROJECT_FILE_ROOTFS_SCRIPT
+	cat >>$RK_PROJECT_FILE_ROOTFS_SCRIPT <<EOF
+rootdev=
+while read -r line; do
+	_mpath=\$(echo \$line | awk '{print \$3}')
+	if [ \$_mpath == "/" ]; then
+		rootdev=\$(echo \$line | awk '{print \$1}')
+		rootdev=\$(realpath \$rootdev)
+		echo "Found rootdev: \$rootdev"
+		break
+	fi
+done <<< "\$(mount)"
+if [ ! -n "\$rootdev" ];then
+	echo "Error: Not found root_dev mount on / ."
+	exit 1
+fi
+EOF
 	echo "bootmedium=$RK_BOOT_MEDIUM" >>$RK_PROJECT_FILE_ROOTFS_SCRIPT
 	echo "linkdev(){" >>$RK_PROJECT_FILE_ROOTFS_SCRIPT
 	echo 'if [ ! -d "/dev/block/by-name" ];then' >>$RK_PROJECT_FILE_ROOTFS_SCRIPT
@@ -1816,14 +1839,18 @@ function parse_partition_file() {
 	case $RK_BOOT_MEDIUM in
 	sd_card)
 		cat >>$RK_PROJECT_FILE_ROOTFS_SCRIPT <<EOF
+echo "Unmounting device ..."
 for i in \$(seq 5 8); do
 	det_partition="/dev/mmcblk1p\$i"
+	if [ x"\$det_partition" == x"\$rootdev" ];then
+		continue
+	fi
 	mount_point=\$(mount | grep "\$det_partition" | awk '{print \$3}')
 	if [ -n "\$mount_point" ]; then
-	echo "Unmounting : \$det_partition (\$mount_point)"
-	umount "\$det_partition"
+		echo "Unmounting : \$det_partition (\$mount_point)"
+		umount "\$det_partition"
 	else
-	echo "Partition is not mounted: \$det_partition"
+		echo "Partition is not mounted: \$det_partition"
 	fi
 done
 EOF
@@ -1839,8 +1866,7 @@ if [ -z "\$1" -o -z "\$2" -o -z "\$3" ];then
 	echo "Invalid paramter, exit !!!"
 	exit 1
 fi
-root_dev=\$(mountpoint -n /)
-root_dev=\${root_dev%% *}
+root_dev=\$rootdev
 partname=\$1
 part_dev=/dev/block/by-name/\$1
 mountpt=\$2
@@ -2626,7 +2652,7 @@ function build_save() {
 		BOARD_HARDWARE=${BOARD_HARDWARE##*-}
 		BOARD_APP_NAME=${BOARD_APP_NAME##*-}
 		BOARD_APP_NAME=${BOARD_APP_NAME%.mk}
-		STUB_PATH="Image/${BOARD_APP_NAME}_${RK_BOOT_MEDIUM}_${POWER_SOLUTION}_${BOARD_HARDWARE}_${DATE}_RELEASE_TEST"
+		STUB_PATH="Image/${BOARD_APP_NAME}_${RK_BOOT_MEDIUM}_${POWER_SOLUTION}_${BOARD_HARDWARE}_${DATE}"
 		STUB_PATH="$(echo $STUB_PATH | tr '[:lower:]' '[:upper:]')"
 		export STUB_PATH=$SDK_ROOT_DIR/$STUB_PATH
 		export STUB_PATCH_PATH=$STUB_PATH/PATCHES
@@ -2651,6 +2677,12 @@ function build_save() {
 		mkdir -p $STUB_DEBUG_FILES_PATH/uboot
 		test -f $RK_PROJECT_PATH_BOARD_BIN/uboot.debug.tar.bz2 && cd $RK_PROJECT_PATH_BOARD_BIN/ &&
 			cp -fv uboot.debug.tar.bz2 $STUB_DEBUG_FILES_PATH/uboot
+
+		# Archive IMAGES
+		echo "Archive 'IMAGES/' dir ..."
+		cd $STUB_PATH
+		zip -r IMAGES.zip ./IMAGES -x ./IMAGES/update.img -x ./IMAGES/download.bin
+		cd -
 
 		#Save build command info
 		echo "BUILD-ID: $(hostname):$(whoami)" >>$STUB_PATH/build_info.txt

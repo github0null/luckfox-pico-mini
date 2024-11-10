@@ -24,7 +24,8 @@ rcK()
 	done
 }
 
-echo "Stop Application ..."
+echo ">>> Stop RK IPC Application ..."
+
 killall rkipc
 killall udhcpc
 

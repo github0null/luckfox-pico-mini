@@ -1,0 +1,94 @@
+#!/bin/sh
+#
+# pre-init before startup other service
+#
+
+SWAP_DEV=/dev/mmcblk1p6
+_init_swap() {
+	echo "Init swap partition ..."
+	# /dev/mmcblk1p5: LABEL="oem" UUID="...." ... TYPE="ext4" USAGE="filesystem"
+	echo $(blkid -p $SWAP_DEV) | grep -q "TYPE=\"swap\"" > /dev/null
+	if [ ! $? -eq 0 ]; then
+		echo "  Create swap ($SWAP_DEV) partition ..."
+		mkswap $SWAP_DEV
+	fi
+	echo $(swapon) | grep -q "$SWAP_DEV" > /dev/null
+	if [ $? -eq 0 ]; then
+		echo "$0: Partition $SWAP_DEV is already in use !"
+		return
+	else
+		swapon $SWAP_DEV
+	fi
+	echo "Ok."
+}
+
+# -------------------------------------------------------------------------------------
+# !!! THIS IMPLEMENT IS DISCARD BECAUSE '/etc/init.d/S50usbdevice' IS ALREADY DO IT.
+# -------------------------------------------------------------------------------------
+# _init_usb_gadget() {
+# 	# modprobe g_mass_storage && sleep .3
+# 	# modprobe g_serial		&& sleep .3
+# 	# modprobe g_ether 		&& sleep .3
+# 	# modprobe gadgetfs		&& sleep .3
+# 	# modprobe g_ncm			&& sleep .3
+# 	# modprobe g_webcam		&& sleep .3
+# }
+# _deinit_usb_gadget() {
+# 	# modprobe -r g_mass_storage
+# 	# modprobe -r g_serial
+# 	# modprobe -r g_ether
+# 	# modprobe -r gadgetfs
+# 	# modprobe -r g_ncm
+# 	# modprobe -r g_webcam
+# }
+# UMS_IMG=/sdcard.img
+# UMS_MOUNTPT=/mnt/sdcard
+# _init_ums() {
+# 	echo "Init USB Mass Storage ..."
+# 	echo $(file $UMS_IMG) | grep -q "FAT" > /dev/null
+# 	if [ ! $? -eq 0 ]; then
+# 		echo "  Create $UMS_IMG ..."
+# 		dd if=/dev/zero of=$UMS_IMG bs=1M count=128
+# 		mkfs.vfat -c -F 32 -n ums $UMS_IMG
+# 	fi
+# 	mkdir -p $UMS_MOUNTPT
+# 	lodev=$(losetup -f)
+# 	if [ ! $? -eq 0 ]; then
+# 		echo "$0: Cannot setup loop dev."
+# 		return
+# 	fi
+# 	losetup $lodev $UMS_IMG
+# 	mount -t vfat -o sync $lodev $UMS_MOUNTPT
+# 	echo $(lsmod) | grep -q "g_mass_storage" > /dev/null
+# 	if [ $? -eq 0 ]; then
+# 		rmmod g_mass_storage
+# 	fi
+# 	insmod /lib/modules/$(uname -r)/kernel/drivers/usb/gadget/legacy/g_mass_storage.ko file=$UMS_IMG removable=1 stall=0
+# 	if [ $? -eq 0 ]; then
+# 		echo "Ok."
+# 	else
+# 		echo "$0: Failed."
+# 	fi
+# }
+# _deinit_ums() {
+# 	echo "Deinit USB Mass Storage ..."
+# 	umount $UMS_MOUNTPT
+# 	echo $(lsmod) | grep -q "g_mass_storage" > /dev/null
+# 	if [ $? -eq 0 ]; then
+# 		rmmod g_mass_storage
+# 	fi
+# 	echo "Ok."
+# }
+
+case "$1" in
+  start)
+	_init_swap
+	;;
+  stop)
+	;;
+  *)
+	echo "Usage: $0 {start|stop}"
+	exit 1
+esac
+
+exit $?

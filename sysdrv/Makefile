@@ -594,6 +594,7 @@ buildroot_menuconfig:
 buildroot_savedefconfig:
 	@echo -e "$(C_GREEN) ==sysdrv== buildroot savedefconfig   $(C_NORMAL)"
 	$(MAKE) savedefconfig -C $(BUILDROOT_DIR)/$(BUILDROOT_VER) 
+	cp -fv $(BUILDROOT_DIR)/$(BUILDROOT_VER)/configs/$(BUILDROOT_DEFCONFIG) $(SYSDRV_DIR)/tools/board/buildroot/
 
 buildroot_create:
 	@echo -e "$(C_GREEN) ==sysdrv== buildroot create   $(C_NORMAL)"
@@ -603,6 +604,7 @@ buildroot_create:
 	cp $(SYSDRV_DIR)/tools/board/buildroot/luckfox_pico_defconfig $(BUILDROOT_DIR)/$(BUILDROOT_VER)/configs/
 	cp $(SYSDRV_DIR)/tools/board/buildroot/luckfox_pico_w_defconfig $(BUILDROOT_DIR)/$(BUILDROOT_VER)/configs/
 	cp $(SYSDRV_DIR)/tools/board/buildroot/busybox.config $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/busybox/
+	cp $(SYSDRV_DIR)/tools/board/buildroot/busybox-minimal.config $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/busybox/
 	cp ${HCITOOL_TOOL_PATH}/0001-Fixed-header-file-errors.patch $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/bluez5_utils/
 	cp ${HCITOOL_TOOL_PATH}/0002-Fix-build-errors.patch $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/bluez5_utils/
 	cp ${HCITOOL_TOOL_PATH}/0003-fix-compat-wordexp.patch $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/bluez5_utils/
@@ -616,6 +618,7 @@ buildroot: prepare
 		cp $(SYSDRV_DIR)/tools/board/buildroot/luckfox_pico_defconfig $(BUILDROOT_DIR)/$(BUILDROOT_VER)/configs/ ;\
 		cp $(SYSDRV_DIR)/tools/board/buildroot/luckfox_pico_w_defconfig $(BUILDROOT_DIR)/$(BUILDROOT_VER)/configs/ ;\
 		cp $(SYSDRV_DIR)/tools/board/buildroot/busybox.config $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/busybox/ ;\
+		cp $(SYSDRV_DIR)/tools/board/buildroot/busybox-minimal.config $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/busybox/ ;\
 		cp ${HCITOOL_TOOL_PATH}/0001-Fixed-header-file-errors.patch $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/bluez5_utils/ ;\
 		cp ${HCITOOL_TOOL_PATH}/0002-Fix-build-errors.patch $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/bluez5_utils/ ;\
 		cp ${HCITOOL_TOOL_PATH}/0003-fix-compat-wordexp.patch $(BUILDROOT_DIR)/$(BUILDROOT_VER)/package/bluez5_utils/ ;\
@@ -640,22 +643,22 @@ ifeq ($(SYSDRV_BUILD_RAMDISK_FLAG),YES)
 	endif
 else
 	tar xf $(BUILDROOT_DIR)/$(BUILDROOT_VER)/output/images/rootfs.tar -C $(SYSDRV_DIR_OUT_ROOTFS)
-	#cp $(SYSDRV_DIR)/tools/board/buildroot/busybox $(SYSDRV_DIR_OUT_ROOTFS)/bin/busybox
-	cp $(SYSDRV_DIR)/tools/board/buildroot/shadow_defconfig $(SYSDRV_DIR_OUT_ROOTFS)/etc/shadow
-	cp $(SYSDRV_DIR)/tools/board/buildroot/sshd_defconfig $(SYSDRV_DIR_OUT_ROOTFS)/etc/ssh/sshd_config
-	cp $(SYSDRV_DIR)/tools/board/buildroot/samba_defconfig $(SYSDRV_DIR_OUT_ROOTFS)/etc/samba/smb.conf
-	cp $(SYSDRV_DIR)/tools/board/buildroot/smbpasswd_defconfig $(SYSDRV_DIR_OUT_ROOTFS)/etc/samba/smbpasswd
-	cp $(SYSDRV_DIR)/tools/board/buildroot/profile_defconfig $(SYSDRV_DIR_OUT_ROOTFS)/etc/profile
-	cp $(SYSDRV_DIR)/tools/board/buildroot/iomux $(SYSDRV_DIR_OUT_ROOTFS)/usr/bin/
-	cp $(SYSDRV_DIR)/tools/board/buildroot/S99hciinit $(SYSDRV_DIR_OUT_ROOTFS)/etc/init.d/
-	cp $(SYSDRV_DIR)/tools/board/buildroot/S99rtcinit $(SYSDRV_DIR_OUT_ROOTFS)/etc/init.d/
-	cp $(SYSDRV_DIR)/tools/board/buildroot/S50sshd $(SYSDRV_DIR_OUT_ROOTFS)/etc/init.d/
-	cp $(SYSDRV_DIR)/tools/board/buildroot/S99python $(SYSDRV_DIR_OUT_ROOTFS)/etc/init.d/
-	cp $(SYSDRV_DIR)/tools/board/luckfox_config/S99luckfoxconfigload $(SYSDRV_DIR_OUT_ROOTFS)/etc/init.d/
-	cp $(SYSDRV_DIR)/tools/board/luckfox_config/S99luckfoxcustomoverlay $(SYSDRV_DIR_OUT_ROOTFS)/etc/init.d/
-	cp $(SYSDRV_DIR)/tools/board/luckfox_config/luckfox-config  $(SYSDRV_DIR_OUT_ROOTFS)/usr/bin/
-	cp $(SYSDRV_DIR)/tools/board/luckfox_config/luckfox_switch_rgb_resolution $(SYSDRV_DIR_OUT_ROOTFS)/usr/bin/
-	cp $(SYSDRV_DIR)/tools/board/android-tools/S99usb0config $(SYSDRV_DIR_OUT_ROOTFS)/etc/init.d/
+	echo -e "$(C_YELLOW) Override rootfs content ...$(C_NORMAL)"
+	cp -v $(SYSDRV_DIR)/tools/board/luckfox_config/S99luckfoxconfigload $(SYSDRV_DIR)/source/overlay/etc/init.d/
+	cp -v $(SYSDRV_DIR)/tools/board/luckfox_config/luckfox_switch_rgb_resolution $(SYSDRV_DIR)/source/overlay/usr/bin/
+	cp -v $(SYSDRV_DIR)/tools/board/luckfox_config/luckfox-config  $(SYSDRV_DIR)/source/overlay/usr/bin/
+	## !!! DISABLED !!!
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/busybox $(SYSDRV_DIR)/source/overlay/bin/busybox
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/shadow_defconfig $(SYSDRV_DIR)/source/overlay/etc/shadow
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/samba_defconfig $(SYSDRV_DIR)/source/overlay/etc/samba/smb.conf
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/smbpasswd_defconfig $(SYSDRV_DIR)/source/overlay/etc/samba/smbpasswd
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/profile_defconfig $(SYSDRV_DIR)/source/overlay/etc/profile
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/S99hciinit $(SYSDRV_DIR)/source/overlay/etc/init.d/
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/S99rtcinit $(SYSDRV_DIR)/source/overlay/etc/init.d/
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/S50sshd $(SYSDRV_DIR)/source/overlay/etc/init.d/
+	#cp -v $(SYSDRV_DIR)/tools/board/buildroot/S99python $(SYSDRV_DIR)/source/overlay/etc/init.d/
+	#cp -v $(SYSDRV_DIR)/tools/board/luckfox_config/S99luckfoxcustomoverlay $(SYSDRV_DIR)/source/overlay/etc/init.d/
+	#cp -v $(SYSDRV_DIR)/tools/board/android-tools/S99usb0config$(SYSDRV_DIR)/source/overlay/etc/init.d/
 endif
 
 buildroot_clean:
@@ -743,23 +746,25 @@ boardtools_clean: tools_board-clean
 ##########################################################################################
 drv: prepare
 	@echo -e "$(C_GREEN) ==sysdrv== build drv $(C_NORMAL)"
-	@-rm -rf $(SYSDRV_KERNEL_MOD_PATH) $(KERNEL_DIR_DRV_KO)
-	@-mkdir -p $(SYSDRV_KERNEL_MOD_PATH)
+	@-rm -rf $(SYSDRV_KERNEL_MOD_PATH) $(KERNEL_DIR_DRV_KO) $(SYSDRV_DIR_OUT_ROOTFS)/lib/modules
+	@-mkdir -p $(SYSDRV_KERNEL_MOD_PATH) $(SYSDRV_DIR_OUT_ROOTFS)/lib/modules
 	$(MAKE) -C $(KERNEL_DIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -j$(SYSDRV_JOBS) \
 			O=$(SYSDRV_KERNEL_OBJS_OUTPUT_DIR) \
 		modules
 	$(MAKE) -C $(KERNEL_DIR) ARCH=$(ARCH) CROSS_COMPILE=$(CROSS_COMPILE) -j$(SYSDRV_JOBS) \
 		O=$(SYSDRV_KERNEL_OBJS_OUTPUT_DIR) \
 		modules_install INSTALL_MOD_STRIP=1 \
-		INSTALL_MOD_PATH=$(KERNEL_DIR_DRV_KO)
-	$(AT)find $(KERNEL_DIR_DRV_KO)/lib/modules/*/kernel \
-		-name "*.ko" -type f -exec cp -fav {} $(SYSDRV_KERNEL_MOD_PATH) \;
+		INSTALL_MOD_PATH=$(SYSDRV_DIR_OUT_ROOTFS)
+	@-rm -rf $(SYSDRV_DIR_OUT_ROOTFS)/lib/modules/*/build
+	@-rm -rf $(SYSDRV_DIR_OUT_ROOTFS)/lib/modules/*/source
+	# $(AT)find $(KERNEL_DIR_DRV_KO)/lib/modules/*/kernel \
+	# 	-name "*.ko" -type f -exec cp -fav {} $(SYSDRV_KERNEL_MOD_PATH) \;
 	@test ! -d drv_ko || ($(MAKE) O=$(SYSDRV_KERNEL_OBJS_OUTPUT_DIR) -C $(SYSDRV_DIR)/drv_ko KERNEL_DRV_KO_INSTALL_PATH=$(SYSDRV_KERNEL_MOD_PATH))
 	$(call MAROC_COPY_PKG_TO_SYSDRV_OUTPUT, $(OUTPUT_ROOTFS_SOURCE_DIR), $(SYSDRV_KERNEL_MOD_PATH), SELF)
 
 drv_clean:
 	@test ! -d drv_ko || $(MAKE) -C $(SYSDRV_DIR)/drv_ko clean
-	@-rm -rf $(SYSDRV_KERNEL_MOD_PATH) $(KERNEL_DIR_DRV_KO)
+	@-rm -rf $(SYSDRV_KERNEL_MOD_PATH) $(KERNEL_DIR_DRV_KO) $(SYSDRV_DIR_OUT_ROOTFS)/lib/modules
 	@echo -e "$(C_GREEN) ==sysdrv== clean drv $(C_NORMAL)"
 
 ##########################################################################################
@@ -826,6 +831,7 @@ rootfs_initramfs:
 
 rootfs_clean:
 	$(AT)rm $(SYSDRV_DIR_OUT_ROOTFS)/ -rf
+	$(AT)rm $(SYSDRV_DIR_OUT_ROOTFS).tar -f
 	test ! -d $(BUILDROOT_DIR)/$(BUILDROOT_VER)/output/target  || (\
 		rm -rf $(BUILDROOT_DIR)/$(BUILDROOT_VER)/output/target ;\
 		find $(BUILDROOT_DIR)/$(BUILDROOT_VER) -name ".stamp_target_installed" -exec rm {} \; ;\

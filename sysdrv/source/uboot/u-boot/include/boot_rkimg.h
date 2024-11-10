@@ -20,7 +20,8 @@ enum _boot_mode {
 	BOOT_MODE_WATCHDOG,
 	BOOT_MODE_DFU,
 	BOOT_MODE_QUIESCENT,
-	BOOT_MODE_UNDEFINE,
+  BOOT_MODE_UBOOT_TERMINAL,
+  BOOT_MODE_UNDEFINE,
 };
 
 struct bootloader_message {

@@ -85,4 +85,8 @@ __insmod rve.ko
 udevadm control --start-exec-queue
 
 # insmod wifi driver background
-$(pwd)/insmod_wifi.sh &
+if [ -f $(pwd)/insmod_wifi.sh ]; then
+	$(pwd)/insmod_wifi.sh &
+else
+	echo "Warn: $(pwd)/insmod_wifi.sh not exist !"
+fi

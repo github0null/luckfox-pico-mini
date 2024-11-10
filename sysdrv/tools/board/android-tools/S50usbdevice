@@ -7,32 +7,44 @@
 . /etc/profile
 
 UMS_EN=off
-ADB_EN=on
+ADB_EN=off
 MTP_EN=off
 NTB_EN=off
 ACM_EN=off
 UAC1_EN=off
 UAC2_EN=off
 UVC_EN=off
-RNDIS_EN=on
+RNDIS_EN=off
 HID_EN=off
 
 USB_ATTRIBUTE=0x409
 USB_GROUP=rockchip
 USB_SKELETON=b.1
 
+# /sys/kernel/config/usb_gadget/rockchip
 CONFIGFS_DIR=/sys/kernel/config
 USB_CONFIGFS_DIR=${CONFIGFS_DIR}/usb_gadget/${USB_GROUP}
 USB_STRINGS_DIR=${USB_CONFIGFS_DIR}/strings/${USB_ATTRIBUTE}
 USB_FUNCTIONS_DIR=${USB_CONFIGFS_DIR}/functions
 USB_CONFIGS_DIR=${USB_CONFIGFS_DIR}/configs/${USB_SKELETON}
 
+# usb info
+USB_VID=0x2207		# vendor ID (https://www.usb.org/sites/default/files/vendor_ids100824_0.pdf)
+USB_PID=0x0000		# vendor product id
+USB_BCD_DEV=0x0310	# device firmware version
+USB_BCD_USB=0x0200	# support USB version
+# --- attr
+USB_ATTR_manufacturer=rockchip
+USB_ATTR_product=rv1103
+
 # For VBUS_ALWAYS_ON usb otg is not support ums
 # Since the block to ums is always occupated by USB due to no disconneted state
-UMS_BLOCK=/userdata/ums_shared.img
-UMS_BLOCK_SIZE=0	#unit M
-UMS_BLOCK_TYPE=fat
-UMS_BLOCK_AUTO_MOUNT=off
+UMS_LABEL=UMS
+UMS_MOUNTPT=/mnt/sdcard
+UMS_BLOCK=/sdcard.img
+UMS_BLOCK_SIZE=128	#unit M
+UMS_BLOCK_TYPE=vfat
+UMS_BLOCK_AUTO_MOUNT=on
 UMS_RO=0
 
 UVC_DIR=${USB_FUNCTIONS_DIR}/uvc.gs6/
@@ -47,53 +59,61 @@ test_write()
 	test -e $2 && echo $1 > $2
 }
 
-function_init()
+configfs_init()
 {
+	echo "$0: configfs_init ..."
+	mkdir /dev/usb-ffs
+	mount -t configfs none ${CONFIGFS_DIR}
+
+	echo "Write config: ${USB_CONFIGFS_DIR}"
+	mkdir ${USB_CONFIGFS_DIR} -m 0770
+	echo $USB_VID     > ${USB_CONFIGFS_DIR}/idVendor
+	echo $USB_BCD_DEV > ${USB_CONFIGFS_DIR}/bcdDevice
+	echo $USB_BCD_USB > ${USB_CONFIGFS_DIR}/bcdUSB
+	# 兼容的标识符 USB\COMPOSITE：
+	# 设备描述符字类 (bDeviceClass)，子类 (bDeviceSubClass),设备协议 (bDeviceProtocol) 字段必须为 0xEF、 0x02 和 0x01 。
+	echo 0xEF         > ${USB_CONFIGFS_DIR}/bDeviceClass
+	echo 0x02         > ${USB_CONFIGFS_DIR}/bDeviceSubClass
+	echo 0x01         > ${USB_CONFIGFS_DIR}/bDeviceProtocol
+
+	echo "Write config: ${USB_STRINGS_DIR}"
+	mkdir ${USB_STRINGS_DIR}  -m 0770
+	SERIAL=`cat /proc/cpuinfo | grep Serial | awk '{print $3}'`
+	if [ -z $SERIAL ];then
+		SERIAL=0123456789ABCDEF
+	fi
+	echo $SERIAL 				> ${USB_STRINGS_DIR}/serialnumber
+	echo $USB_ATTR_manufacturer > ${USB_STRINGS_DIR}/manufacturer
+	echo $USB_ATTR_product 		> ${USB_STRINGS_DIR}/product
+
+	echo "Write config: ${USB_FUNCTIONS_DIR}"
 	mkdir ${USB_FUNCTIONS_DIR}/uac1.gs0
 	test_write 1 ${USB_FUNCTIONS_DIR}/uac1.gs0/c_feature_unit
 	test_write 1 ${USB_FUNCTIONS_DIR}/uac1.gs0/p_feature_unit
 	mkdir ${USB_FUNCTIONS_DIR}/uac2.gs0
 	test_write 1 ${USB_FUNCTIONS_DIR}/uac2.gs0/c_feature_unit
 	test_write 1 ${USB_FUNCTIONS_DIR}/uac2.gs0/p_feature_unit
-	mkdir ${USB_FUNCTIONS_DIR}/ffs.adb
-	mkdir ${USB_FUNCTIONS_DIR}/ffs.ntb
-	mkdir ${USB_FUNCTIONS_DIR}/mtp.gs0
+	# mkdir ${USB_FUNCTIONS_DIR}/ffs.adb
+	# mkdir ${USB_FUNCTIONS_DIR}/ffs.ntb
+	# mkdir ${USB_FUNCTIONS_DIR}/mtp.gs0
 	mkdir ${USB_FUNCTIONS_DIR}/rndis.gs0
 	#write /config/usb_gadget/g1/functions/rndis.gs0/wceis 1
 	mkdir ${USB_FUNCTIONS_DIR}/acm.gs6
 	mkdir ${USB_FUNCTIONS_DIR}/mass_storage.0
 	mkdir ${USB_FUNCTIONS_DIR}/uvc.gs6
 	mkdir ${USB_FUNCTIONS_DIR}/hid.usb0
-}
 
-configfs_init()
-{
-	echo "Debug: configfs_init"
-	mkdir /dev/usb-ffs
-
-	mount -t configfs none ${CONFIGFS_DIR}
-	mkdir ${USB_CONFIGFS_DIR} -m 0770
-	echo 0x2207 > ${USB_CONFIGFS_DIR}/idVendor
-	echo 0x0310 > ${USB_CONFIGFS_DIR}/bcdDevice
-	echo 0x0200 > ${USB_CONFIGFS_DIR}/bcdUSB
-	mkdir ${USB_STRINGS_DIR}   -m 0770
-	SERIAL=`cat /proc/cpuinfo | grep Serial | awk '{print $3}'`
-	if [ -z $SERIAL ];then
-		SERIAL=0123456789ABCDEF
-	fi
-	echo $SERIAL > ${USB_STRINGS_DIR}/serialnumber
-	echo "rockchip"  > ${USB_STRINGS_DIR}/manufacturer
-	echo "rk3xxx"  > ${USB_STRINGS_DIR}/product
-
-	function_init
-
+	echo "Write config: ${USB_CONFIGS_DIR}"
 	mkdir ${USB_CONFIGS_DIR}  -m 0770
 	mkdir ${USB_CONFIGS_DIR}/strings/${USB_ATTRIBUTE}  -m 0770
+	echo 500 > ${USB_CONFIGS_DIR}/MaxPower
 
+	echo "Write config: ${USB_CONFIGFS_DIR}/os_desc"
 	echo 0x1 > ${USB_CONFIGFS_DIR}/os_desc/b_vendor_code
 	echo "MSFT100" > ${USB_CONFIGFS_DIR}/os_desc/qw_sign
-	echo 500 > ${USB_CONFIGS_DIR}/MaxPower
 	ln -s ${USB_CONFIGS_DIR} ${USB_CONFIGFS_DIR}/os_desc/b.1
+
+	echo "$0: Ok."
 }
 
 make_config_string()
@@ -191,52 +211,35 @@ parameter_init()
 	done < $USB_CONFIG_FILE
 
 	case "$CONFIG_STRING" in
-		ums)
-			PID=0x0000
+		rndis)
+			USB_PID=0x0000
 			;;
 		mtp)
-			PID=0x0001
+			USB_PID=0x0001
 			;;
 		adb)
-			PID=0x0006
+			USB_PID=0x0006
 			;;
 		mtp_adb | adb_mtp)
-			PID=0x0011
+			USB_PID=0x0011
 			;;
 		ums_adb | adb_ums)
-			PID=0x0018
+			USB_PID=0x0018
 			;;
 		acm)
-			PID=0x1005
+			USB_PID=0x1005
 			;;
 		*)
-			PID=0x0019
+			USB_PID=0x0000
 	esac
 }
 
-use_os_desc()
+usb_os_desc_on()
 {
-	if [ $MTP_EN = on ];then
+	if [ $MTP_EN = on ]; then
 		echo "MTP" > ${USB_FUNCTIONS_DIR}/mtp.gs0/os_desc/interface.MTP/compatible_id
 		echo 1 > ${USB_CONFIGFS_DIR}/os_desc/use
 	fi
-}
-
-pre_run_binary()
-{
-	if [ $ADB_EN = on ];then
-		mkdir /dev/usb-ffs/adb -m 0770
-		mount -o uid=2000,gid=2000 -t functionfs adb /dev/usb-ffs/adb
-		start-stop-daemon --start --quiet --background --exec /usr/bin/adbd
-	fi
-
-	if [ $NTB_EN = on ];then
-		mkdir /dev/usb-ffs/ntb -m 0770
-		mount -o uid=2000,gid=2000 -t functionfs ntb /dev/usb-ffs/ntb
-		# Not start app here
-	fi
-
-	# Add uvc app here with start-stop-daemon
 }
 
 configure_uvc_resolution_yuyv()
@@ -290,14 +293,17 @@ syslink_function()
 	let USB_FUNCTIONS_CNT=USB_FUNCTIONS_CNT+1
 }
 
-bind_functions()
+setup_functions()
 {
+	echo "USB gadget: setup functions ..."
+
 	USB_FUNCTIONS_CNT=1
 
 	test $UAC1_EN = on && syslink_function uac1.gs0
 	test $UAC2_EN = on && syslink_function uac2.gs0
 
 	if [ $UVC_EN = on ];then
+		echo "Setup UVC ..."
 		#echo 3072 > ${UVC_DIR}/streaming_maxpacket
 		#echo 1 > ${UVC_DIR}/streaming_bulk
 
@@ -333,6 +339,7 @@ bind_functions()
 		ln -s ${UVC_STREAMING_DIR}/header/h ${UVC_STREAMING_DIR}/class/ss/h
 
 		syslink_function uvc.gs6
+		echo "Ok."
 	fi
 
 	test $RNDIS_EN = on && syslink_function rndis.gs0
@@ -342,44 +349,98 @@ bind_functions()
 	test $ACM_EN = on && syslink_function acm.gs6
 
 	if [ $HID_EN = on ]; then
+		echo "Setup HID ..."
 		echo 1 > /sys/kernel/config/usb_gadget/rockchip/functions/hid.usb0/protocol
 		echo 1 > /sys/kernel/config/usb_gadget/rockchip/functions/hid.usb0/subclass
 		echo 8 > /sys/kernel/config/usb_gadget/rockchip/functions/hid.usb0/report_length
 		echo -ne \\x05\\x01\\x09\\x06\\xa1\\x01\\x05\\x07\\x19\\xe0\\x29\\xe7\\x15\\x00\\x25\\x01\\x75\\x01\\x95\\x08\\x81\\x02\\x95\\x01\\x75\\x08\\x81\\x03\\x95\\x05\\x75\\x01\\x05\\x08\\x19\\x01\\x29\\x05\\x91\\x02\\x95\\x01\\x75\\x03\\x91\\x03\\x95\\x06\\x75\\x08\\x15\\x00\\x25\\x65\\x05\\x07\\x19\\x00\\x29\\x65\\x81\\x00\\xc0 > /sys/kernel/config/usb_gadget/rockchip/functions/hid.usb0/report_desc
 		syslink_function hid.usb0
+		echo "Ok."
 	fi
 
 	if [ $UMS_EN = on ];then
+		echo "Setup UMS ..."
 		echo ${UMS_RO} > ${USB_FUNCTIONS_DIR}/mass_storage.0/lun.0/ro
 		if [ "$UMS_BLOCK_SIZE" != "0" -a ! -e ${UMS_BLOCK} ]; then
+			echo "Creating $UMS_MOUNTPT partition (size:${UMS_BLOCK_SIZE}M)..."
 			dd if=/dev/zero of=${UMS_BLOCK} bs=1M count=${UMS_BLOCK_SIZE}
-			mkfs.${UMS_BLOCK_TYPE} ${UMS_BLOCK}
-			test $? && echo "Warning: failed to mkfs.${UMS_BLOCK_TYPE} ${UMS_BLOCK}"
+			mkfs.${UMS_BLOCK_TYPE} -c -F 32 -n $UMS_LABEL ${UMS_BLOCK}
+			if [ ! $? -eq 0 ]; then
+				echo "$0: Fail to mkfs.${UMS_BLOCK_TYPE} ${UMS_BLOCK}"
+			fi
 		fi
-		mkdir /mnt/ums -p
-		if [ $UMS_BLOCK_AUTO_MOUNT = on ];then
-			mount ${UMS_BLOCK} /mnt/ums
-		else
+		mkdir $UMS_MOUNTPT -p
+		mount ${UMS_BLOCK} $UMS_MOUNTPT
+		if [ $? -eq 0 ]; then
+			# If removable is 1, gadget will accept an “eject” SCSI request (Start/Stop Unit). 
+			# When it is sent, the backing file will be closed to simulate ejection and the logical unit will 
+			# not be mountable by the host until a new backing file is specified by userspace on the device.
+			# So, we can't make disk removale
+			echo 0 > ${USB_FUNCTIONS_DIR}/mass_storage.0/lun.0/removable
 			echo ${UMS_BLOCK} > ${USB_FUNCTIONS_DIR}/mass_storage.0/lun.0/file
+			syslink_function mass_storage.0
+			echo "Ok."
+		else
+			echo "$0: Fail to mount $UMS_MOUNTPT"
 		fi
-		syslink_function mass_storage.0
 	fi
 
 	echo ${CONFIG_STRING} > ${USB_CONFIGS_DIR}/strings/${USB_ATTRIBUTE}/configuration
+
+	if [ $ADB_EN = on ]; then
+		echo "Setup ADB ..."
+		mkdir /dev/usb-ffs/adb -m 0770
+		mount -o uid=2000,gid=2000 -t functionfs adb /dev/usb-ffs/adb
+		start-stop-daemon --start --quiet --background --exec /usr/bin/adbd
+		sleep .5
+		echo "Ok."
+	fi
+
+	if [ $NTB_EN = on ]; then
+		echo "Setup NTB ..."
+		mkdir /dev/usb-ffs/ntb -m 0770
+		mount -o uid=2000,gid=2000 -t functionfs ntb /dev/usb-ffs/ntb
+		echo "Ok."
+		# Not start app here
+	fi
+
+	if [ $MTP_EN = on ]; then
+		echo "Setup MTP ..."
+		start-stop-daemon --start --quiet --background --exec /usr/bin/mtp-server
+		sleep .5
+		echo "Ok."
+	fi
 }
 
-run_binary()
-{
-	if [ $MTP_EN = on ];then
-		start-stop-daemon --start --quiet --background --exec /usr/bin/mtp-server
+post_usb_start() {
+	if [ $RNDIS_EN = on ]; then
+		_wait_cnt=1
+		_wait_max=5
+		echo "$0: Waiting usb0 active ..."
+		while [ $_wait_cnt -lt $_wait_max ]
+		do
+			echo $(ls /sys/class/net) | grep -q "usb0" > /dev/null
+			if [ $? -eq 0 ]; then
+				break
+			else
+				let _wait_cnt=_wait_cnt+1
+				sleep 1
+			fi
+		done
+		if [ ! $_wait_cnt -eq $_wait_max ]; then
+			echo "$0: Setup network ..."
+			ifconfig usb0 up
+			#dhclient -v usb0
+			if [ $? -eq 0 ]; then
+				ifconfig usb0
+				echo "Ok."
+			else
+				echo "$0: Fail to start dhclient"
+			fi
+		else
+			echo "$0: Not found usb0 device !"
+		fi
 	fi
-	if [ $RNDIS_EN = on ];then
-
-	sleep .5
-	ifconfig usb0 172.32.0.70
-	ifconfig usb0 up
-	fi
-
 }
 
 program_kill()
@@ -390,7 +451,7 @@ program_kill()
 
 usb_device_stop()
 {
-	echo "none" > ${USB_CONFIGFS_DIR}/UDC
+	echo "" > ${USB_CONFIGFS_DIR}/UDC
 	program_kill adbd
 	program_kill mtp-server
 	ls ${USB_CONFIGS_DIR} | grep f[0-9] | xargs -I {} rm ${USB_CONFIGS_DIR}/{}
@@ -398,32 +459,41 @@ usb_device_stop()
 
 case "$1" in
 start)
-	ifconfig lo up
-#	if [ ! -e "/tmp/.usb_config" ]; then
-#		echo "$0: Cannot find .usb_config"
-#		# exit 0
-#		USB_CONFIG_FILE=/tmp/.usb_config
-#		echo "usb_adb_en" >> $USB_CONFIG_FILE
-#	fi
-
-#	if [ -e /tmp/.usb_config ]; then
-#		USB_CONFIG_FILE=/tmp/.usb_config
-#	fi
+	if [ ! -e "$USB_CONFIG_FILE" ]; then
+		export USB_CONFIG_FILE="/tmp/.usb_config"
+		echo "$0 Warn: write default config to '$USB_CONFIG_FILE':"
+		# put your config
+		echo "usb_acm_en" >> $USB_CONFIG_FILE
+		echo "usb_ums_en" >> $USB_CONFIG_FILE
+		echo "usb_rndis_en" >> $USB_CONFIG_FILE
+		cat $USB_CONFIG_FILE
+	fi
 
 	parameter_init
-#	if [ -z $CONFIG_STRING ]; then
-#		echo "$0: no function be selected"
-#		exit 0
-#	fi
+	if [ -z $CONFIG_STRING ]; then
+		echo "$0: No function be selected"
+		exit 0
+	fi
+
+	UDC=$(ls /sys/class/udc/ | awk '{print $1}')
+	if [ -z $UDC ]; then
+		echo "$0: Failed, no found any UDC !"
+		exit 1
+	fi
+
+	ifconfig lo up
 	test -d ${USB_CONFIGFS_DIR} || configfs_init
-	use_os_desc
-	echo $PID > ${USB_CONFIGFS_DIR}/idProduct
-	bind_functions
-	pre_run_binary
-	sleep 1
-	UDC=`ls /sys/class/udc/| awk '{print $1}'`
+	echo $USB_PID > ${USB_CONFIGFS_DIR}/idProduct
+	usb_os_desc_on
+	setup_functions && sleep .5
+	echo "Write ${USB_CONFIGFS_DIR}/UDC"
 	echo $UDC > ${USB_CONFIGFS_DIR}/UDC
-	run_binary
+	if [ ! $? -eq 0 ]; then
+		echo "$0: Fail to write UDC: ($UDC) -> ${USB_CONFIGFS_DIR}/UDC"
+		exit 1
+	fi
+	echo "Ok."
+	post_usb_start &
 	;;
 stop)
 	usb_device_stop

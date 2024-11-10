@@ -1,51 +1,51 @@
+
+# -------------------------------
+# 本仓库从：https://github.com/LuckfoxTECH/luckfox-pico commit-id e1caff31f64cbb1e7dbed793b764bbf1c020d6c7 分叉
+# -------------------------------
+
 ![luckfox](https://github.com/LuckfoxTECH/luckfox-pico/assets/144299491/cec5c4a5-22b9-4a9a-abb1-704b11651e88)
 # Luckfox Pico SDK
-[中文版](./README_CN.md)
-* This SDK is modified based on the SDK provided by Rockchip
-* It provides a customized SDK specifically for Luckfox Pico series development boards 
-* Aimed at providing developers with a better programming experience
-## SDK Updatelog
-+ Current Version: V1.4
-1. Updated U-Boot to support fast boot for RV1106 using SPI NAND and eMMC.
-2. Optimized U-Boot compatibility with SD cards, reducing the likelihood of SD card recognition failures.
-3. Updated the kernel version to 5.10.160, increasing the NPU frequency for RV1106G3.
-4. Updated the Buildroot mirror source for more stable package downloads.
-5. Added support for custom file systems.
-6. Partial bug fixes
-## SDK Usage Instructions
-* recommended operating system : Ubuntu 22.04 
-### Installing Dependencies
+[English Version](./README.md)
+* 本SDK基于RK官方提供的SDK修改而来
+* 专为Luckfox Pico系列开发板提供客制化的SDK
+* 旨在为开发者提供更好的编程体验
+## SDK 更新日志
++ 当前版本 V1.4
+1. 更新uboot，提供rv1106使用spi_nand和emmc快速启动的支持
+2. 优化了uboot对SD卡的兼容性，减少识别SD卡失败的概率
+3. 更新内核版本为5.10.160，提高rv1106g3的npu频率
+4. 更新buildroot的镜像源，使软件包下载更加稳定
+5. 添加了自定义文件系统的支持
+6. 部分bug修复
+## SDK 使用说明
+* 推荐SDK使用系统环境为Ubuntu 22.04
+### 安装依赖
 ```shell
-sudo apt-get install -y git ssh make gcc gcc-multilib g++-multilib module-assistant expect g++ gawk texinfo libssl-dev bison flex fakeroot cmake unzip gperf autoconf device-tree-compiler libncurses5-dev pkg-config bc python-is-python3 passwd openssl openssh-server openssh-client vim file cpio rsync
+sudo apt-get install repo git ssh make gcc gcc-multilib g++-multilib module-assistant expect g++ gawk texinfo libssl-dev bison flex fakeroot cmake unzip gperf autoconf device-tree-compiler libncurses5-dev pkg-config
 ```
-### Get SDK
-```
-git clone https://github.com/LuckfoxTECH/luckfox-pico.git
-```
-### Environment Variables
-* The cross-compilation toolchain needs to be set Environment Variables
-```
-cd {SDK_PATH}/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/
-source env_install_toolchain.sh
-```
-### Get the SDK
-* GitHub
+### 获取SDK
+* github
     ```
-    git clone <https://github.com/LuckfoxTECH/luckfox-pico.git>
+    git clone https://github.com/LuckfoxTECH/luckfox-pico.git
     ```
-* Gitee
+* gitee
     ```
-    git clone <https://gitee.com/LuckfoxTECH/luckfox-pico.git>
+    git clone https://gitee.com/LuckfoxTECH/luckfox-pico.git
     ```
-   * If you need to compile the Ubuntu system and use the Gitee source
-   * Please modify the corresponding board mk file LF_SUBMODULES_BY to gitee, for example
+   * 如果你需要需要编译ubuntu系统，并且使用gitee源
+   * 请修改对应的板型mk文件中LF_SUBMODULES_BY改为gitee，如
         ```
         LF_SUBMODULES_BY=gitee
         ```
-### Instructions for build.sh
-* The build.sh script is used to automate the compilation process. 
-* Most of the compilation operations can be completed automatically through build.sh.
-#### Options for build.sh
+### 环境变量
+* 需要将交叉编译工具链设置
+    ```
+    cd {SDK_PATH}/tools/linux/toolchain/arm-rockchip830-linux-uclibcgnueabihf/
+    source env_install_toolchain.sh
+    ```
+### build.sh使用说明
+* SDK使用build.sh脚本实现自动编译，大部分编译操作均可以通过build.sh自动完成.
+#### build.sh全部可用选项
 ```shell
 Usage: build.sh [OPTIONS]
 Available options:
@@ -86,11 +86,11 @@ info               -see the current board building information
 buildrootconfig    -config buildroot and save defconfig"
 kernelconfig       -config kernel and save defconfig"
 ```
-#### Select the referenced board configuration
+#### 选择参考的板级配置
 ```shell
 ./build.sh lunch
 ```
-+ Output the corresponding Luckfox-pico hardware model. Enter the corresponding number to proceed to the storage media options (press Enter to select option [0] directly).
++ 输出对应的Luckfox-pico硬件型号,输入对应编号后进入存储介质选项（直接回车选择序号[0]选项）
   ```shell
   You're building on Linux
     Lunch menu...pick the Luckfox Pico hardware version:
@@ -105,7 +105,8 @@ kernelconfig       -config kernel and save defconfig"
                   [7] custom
   Which would you like? [0~7][default:0]:
   ```
-+ Output the supported storage media for the corresponding Luckfox-pico hardware model. Enter the corresponding number to proceed to the root filesystem options (press Enter to select option [0] directly).For example, Luckfox Pico Plus.
++ 输出对应的Luckfox-pico硬件型号支持的存储介质,输入对应编号后进入根文件系统选项（直接回车选择序号[0]选项）
+以Luckfox Pico Plus为例
   ```shell
     Lunch menu...pick the boot medium:
     选择启动媒介:
@@ -114,7 +115,7 @@ kernelconfig       -config kernel and save defconfig"
 
   Which would you like? [0~1][default:0]:
   ```
-+ Output the supported root filesystem types for the corresponding Luckfox-pico hardware model. Enter the corresponding number to complete the configuration (press Enter to select option [0] directly).
++ 输出对应的Luckfox-pico硬件型号支持的根文件系统类型,输入对应编号后完成配置(直接回车选择序号[0]选项)
   ```shell
     Lunch menu...pick the system version:
     选择系统版本:
@@ -123,7 +124,7 @@ kernelconfig       -config kernel and save defconfig"
 
   Which would you like? [0~1][default:0]:
   ```
-+ If you need to use the old configuration method or a custom board support file, select the "[7]custom" option when configuring the Luckfox-pico hardware model.
++ 如果需要使用旧的配置方式或者使用自定义的板级支持文件，在配置Luckfox-pico硬件型号时，选择“[7]custom”选项
   ```shell
   You're building on Linux
     Lunch menu...pick the Luckfox Pico hardware version:
@@ -139,7 +140,7 @@ kernelconfig       -config kernel and save defconfig"
   Which would you like? [0~7][default:0]: 7
   ----------------------------------------------------------------
   0. BoardConfig_IPC/BoardConfig-EMMC-Buildroot-RV1106_Luckfox_Pico_Ultra-IPC.mk
-                              boot medium(启动介质): EMMC
+                               boot medium(启动介质): EMMC
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1106_Luckfox_Pico_Ultra
                                 applicaton(应用场景): IPC
@@ -147,7 +148,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   1. BoardConfig_IPC/BoardConfig-EMMC-Buildroot-RV1106_Luckfox_Pico_Ultra_W-IPC.mk
-                              boot medium(启动介质): EMMC
+                               boot medium(启动介质): EMMC
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1106_Luckfox_Pico_Ultra_W
                                 applicaton(应用场景): IPC
@@ -155,7 +156,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   2. BoardConfig_IPC/BoardConfig-EMMC-Ubuntu-RV1106_Luckfox_Pico_Ultra-IPC.mk
-                              boot medium(启动介质): EMMC
+                               boot medium(启动介质): EMMC
                             system version(系统版本): Ubuntu
                           hardware version(硬件版本): RV1106_Luckfox_Pico_Ultra
                                 applicaton(应用场景): IPC
@@ -163,7 +164,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   3. BoardConfig_IPC/BoardConfig-EMMC-Ubuntu-RV1106_Luckfox_Pico_Ultra_W-IPC.mk
-                              boot medium(启动介质): EMMC
+                               boot medium(启动介质): EMMC
                             system version(系统版本): Ubuntu
                           hardware version(硬件版本): RV1106_Luckfox_Pico_Ultra_W
                                 applicaton(应用场景): IPC
@@ -171,7 +172,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   4. BoardConfig_IPC/BoardConfig-SD_CARD-Buildroot-RV1103_Luckfox_Pico-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1103_Luckfox_Pico
                                 applicaton(应用场景): IPC
@@ -179,7 +180,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   5. BoardConfig_IPC/BoardConfig-SD_CARD-Buildroot-RV1103_Luckfox_Pico_Mini_A-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Mini_A
                                 applicaton(应用场景): IPC
@@ -187,7 +188,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   6. BoardConfig_IPC/BoardConfig-SD_CARD-Buildroot-RV1103_Luckfox_Pico_Mini_B-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Mini_B
                                 applicaton(应用场景): IPC
@@ -195,7 +196,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   7. BoardConfig_IPC/BoardConfig-SD_CARD-Buildroot-RV1103_Luckfox_Pico_Plus-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Plus
                                 applicaton(应用场景): IPC
@@ -203,7 +204,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   8. BoardConfig_IPC/BoardConfig-SD_CARD-Buildroot-RV1106_Luckfox_Pico_Pro_Max-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1106_Luckfox_Pico_Pro_Max
                                 applicaton(应用场景): IPC
@@ -211,7 +212,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   9. BoardConfig_IPC/BoardConfig-SD_CARD-Ubuntu-RV1103_Luckfox_Pico-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Ubuntu
                           hardware version(硬件版本): RV1103_Luckfox_Pico
                                 applicaton(应用场景): IPC
@@ -219,7 +220,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   10. BoardConfig_IPC/BoardConfig-SD_CARD-Ubuntu-RV1103_Luckfox_Pico_Mini_A-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Ubuntu
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Mini_A
                                 applicaton(应用场景): IPC
@@ -227,7 +228,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   11. BoardConfig_IPC/BoardConfig-SD_CARD-Ubuntu-RV1103_Luckfox_Pico_Mini_B-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Ubuntu
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Mini_B
                                 applicaton(应用场景): IPC
@@ -235,7 +236,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   12. BoardConfig_IPC/BoardConfig-SD_CARD-Ubuntu-RV1103_Luckfox_Pico_Plus-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Ubuntu
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Plus
                                 applicaton(应用场景): IPC
@@ -243,7 +244,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   13. BoardConfig_IPC/BoardConfig-SD_CARD-Ubuntu-RV1106_Luckfox_Pico_Pro_Max-IPC.mk
-                              boot medium(启动介质): SD_CARD
+                               boot medium(启动介质): SD_CARD
                             system version(系统版本): Ubuntu
                           hardware version(硬件版本): RV1106_Luckfox_Pico_Pro_Max
                                 applicaton(应用场景): IPC
@@ -251,7 +252,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   14. BoardConfig_IPC/BoardConfig-SPI_NAND-Buildroot-RV1103_Luckfox_Pico_Mini_B-IPC.mk
-                              boot medium(启动介质): SPI_NAND
+                               boot medium(启动介质): SPI_NAND
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Mini_B
                                 applicaton(应用场景): IPC
@@ -259,7 +260,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   15. BoardConfig_IPC/BoardConfig-SPI_NAND-Buildroot-RV1103_Luckfox_Pico_Plus-IPC.mk
-                              boot medium(启动介质): SPI_NAND
+                               boot medium(启动介质): SPI_NAND
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1103_Luckfox_Pico_Plus
                                 applicaton(应用场景): IPC
@@ -267,7 +268,7 @@ kernelconfig       -config kernel and save defconfig"
 
   ----------------------------------------------------------------
   16. BoardConfig_IPC/BoardConfig-SPI_NAND-Buildroot-RV1106_Luckfox_Pico_Pro_Max-IPC.mk
-                              boot medium(启动介质): SPI_NAND
+                               boot medium(启动介质): SPI_NAND
                             system version(系统版本): Buildroot
                           hardware version(硬件版本): RV1106_Luckfox_Pico_Pro_Max
                                 applicaton(应用场景): IPC
@@ -275,98 +276,90 @@ kernelconfig       -config kernel and save defconfig"
 
   Which would you like? [default:0]:
   ```
-  Enter the corresponding board support file number to complete the configuration.
-#### Set Buildroot System Default WIFI Configuration
-* Navigate to the board-level configuration directory
+  输入对应的板级支持文件序号完成配置
+#### 设置 Buildroot 系统默认 WIFI 配置
+* 进入板级配置存放目录
     ```shell
     cd {SDK_PATH}/project/cfg/BoardConfig_IPC/
     ```
-* Open the corresponding board-level configuration file
-* Modify the parameters LF_WIFI_PASSWD and LF_WIFI_SSID
+* 打开对应的板级配置文件
+* 修改参数LF_WIFI_PASSWD和LF_WIFI_SSID
     ```shell
     export LF_WIFI_SSID="Your wifi ssid"
     export LF_WIFI_PSK="Your wifi password"
     ```
-#### One-click Automatic Compilation
-```shell
-./build.sh lunch   # Select the reference board configuration
-./build.sh         # One-click automatic compilation
-```
-* Compile busybox/buildroot    
+#### 一键自动编译
+* 编译busybox/buildroot
+    ```shell
+    ./build.sh lunch   # 选择参考板级
+    ./build.sh         # 一键自动编译
     ```
-    ./build.sh lunch   # Select the reference board
-    ./build.sh         # One-click automatic compilation  
-    ``` 
-* Compile Ubuntu
+* 编译ubuntu
+    ```shell
+    sudo ./build.sh lunch   # 选择参考板级
+    sudo ./build.sh         # 一键自动编译
     ```
-    sudo ./build.sh lunch   # Select the reference board
-    sudo ./build.sh         # One-click automatic compilation  
-    ```
-    * Note that when compiling Ubuntu, make sure to use sudo, otherwise it may cause file system errors
-    * The following text will not distinguish between the two sets of instructions, please choose accordingly based on the situation
-#### Build U-Boot
+    * 注意编译ubuntu时需要注意使用sudo，否则会导致文件系统错误
+    * 下文就不一一区分两者指令区别，请自行根据情况选择
+#### 单独编译U-Boot
 ```shell
 ./build.sh clean uboot
 ./build.sh uboot
 ```
-The path of the generated files:
-```
+生成镜像文件：
 output/image/MiniLoaderAll.bin
 output/image/uboot.img
-```
-#### Build kernel
+
+#### 单独编译kernel
 ```shell
 ./build.sh clean kernel
 ./build.sh kernel
 ```
-The path of the generated files:
-```
+生成镜像文件：
 output/image/boot.img
-```
-#### Build rootfs
+
+#### 单独编译rootfs
 ```shell
 ./build.sh clean rootfs
 ./build.sh rootfs
 ```
-* Note : After compilation, use the command ./build.sh firmware to repackage.
+* 注：编译后需使用`./build.sh firmware`命令重新打包
 
-#### Build media
+#### 单独编译media
 ```shell
 ./build.sh clean media
 ./build.sh media
 ```
-The path of the generated files:
+生成文件的存放目录：
 ```
 output/out/media_out
 ```
-* Note : After compilation, use the command ./build.sh firmware to repackage.
-#### Build Reference Applications
+* 注：编译后需使用`./build.sh firmware`命令重新打包
+#### 单独编译参考应用
 ```shell
 ./build.sh clean app
 ./build.sh app
 ```
-* Note 1: The app depends on media.
-* Note 2: After compilation, use the command ./build.sh firmware to repackage.
-#### Firmware Packaging
+* 注1：app依赖media
+* 注2：编译后需使用`./build.sh firmware`命令重新打包
+#### 固件打包
 ```shell
 ./build.sh firmware
 ```
-The path of the generated files:
-```
+生成文件的存放目录：
 output/image
-```
-#### Kernel Config
-```shell
+#### 内核设置
+``` shell
 ./build.sh kernelconfig
 ```
-Open the menuconfig interface for the kernel.
-#### Buildroot Config
+打开 kernel 的 menuconfig 界面
+#### buildroot 设置
 ```shell
 ./build.sh buildrootconfig
 ```
-Open the menuconfig interface for buildroot.
-* Note: This is only applicable when selecting buildroot as the root file system.
+打开 buildroot 的 menuconfig 界面
+* 注：仅在选择 buildroot 作为 rootfs 时才能正常运行
 
-## Notices
-When copying the source code package under Windows, the executable file under Linux may become a non-executable file, or the soft link fails and cannot be compiled and used.
-Therefore, please be careful not to copy the source code package under Windows.
+### 注意事项
+    在windows下复制源码包时，linux下的可执行文件可能变为非可执行文件，或者软连接失效导致无法编译使用。
+    因此使用时请注意不要在windows下复制源代码包。
